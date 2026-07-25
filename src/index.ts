@@ -1,15 +1,44 @@
-import { createServer, IncomingMessage, ServerResponse } from 'http';
-import dotenv from 'dotenv'
+import './config/env.js'
+import { createServer, IncomingMessage, ServerResponse } from "http";
+import { prisma, connectDB, disconnectDB } from "./config/prisma.js";
 
-dotenv.config();
+
+connectDB();
 
 const server = createServer((req: IncomingMessage, res: ServerResponse) => {
-    res.writeHead(200, {'Content-Type': 'text/plain'});
-    res.end("Server running")
-})
+    res.writeHead(200, { "Content-Type": "application/json" });
+    res.end(JSON.stringify({ message: "Server running" }));
+});
 
 const PORT = process.env.PORT || 3000;
 
-server.listen( PORT, () => { 
-    console.log(`Server running on http://localhost:${PORT}`)
-})
+server.listen(PORT, () => {
+    console.log(`Server running on http://localhost:${PORT}`);
+});
+
+// Handle unhandled promise rejections (e.g., database connection errors)
+process.on("unhandledRejection", (err) => {
+    console.error("Unhandled Rejection:", err);
+    server.close(async () => {
+        await disconnectDB();
+        process.exit(1);
+    });
+});
+
+// Handle uncaught exceptions
+process.on("uncaughtException", async (err) => {
+    console.error("Uncaught Exception:", err);
+    server.close(async () => {
+        await disconnectDB();
+        process.exit(1);
+    });
+});
+
+// Graceful shutdown
+process.on("SIGTERM", async () => {
+    console.log("SIGTERM received, shutting down gracefully");
+    server.close(async () => {
+        await disconnectDB();
+        process.exit(0);
+    });
+});
