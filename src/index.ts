@@ -10,7 +10,7 @@ const server = createServer((req: IncomingMessage, res: ServerResponse) => {
     res.end(JSON.stringify({ message: "Server running" }));
 });
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT;
 
 server.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
